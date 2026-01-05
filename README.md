@@ -1,6 +1,24 @@
 # BlogForge AI - SEO Blog Generation Platform
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![React](https://img.shields.io/badge/React-18.3-blue.svg)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.5-blue.svg)](https://www.typescriptlang.org/)
+[![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green.svg)](https://supabase.com/)
+
 A powerful AI-powered blog writing platform that produces highly SEO-optimized content with stunning HTML multimedia articles and direct WordPress publishing.
+
+**🌟 [Live Demo](https://5173-ixulet3iirxv4edpetxnn-583b4d74.sandbox.novita.ai) | 📖 [Setup Guide](SETUP.md) | 🤝 [Contributing](CONTRIBUTING.md)**
+
+## 📸 Screenshots
+
+> **Note**: Add screenshots of your application here once deployed
+
+- Dashboard with usage stats
+- Advanced article generation form
+- API keys management
+- Generated article preview
+
+---
 
 ## 🚀 Key Features
 
