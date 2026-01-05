@@ -3,6 +3,21 @@ import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../components/DashboardLayout';
 import { Zap, FileText, TrendingUp, Clock } from 'lucide-react';
 
+const colorStyles = {
+  blue: {
+    border: 'hover:border-blue-500/50',
+    bg: 'bg-blue-600/20',
+    text: 'text-blue-400',
+    bar: 'bg-blue-500'
+  },
+  violet: {
+    border: 'hover:border-violet-500/50',
+    bg: 'bg-violet-600/20',
+    text: 'text-violet-400',
+    bar: 'bg-violet-500'
+  }
+};
+
 export default function Dashboard() {
   const { profile } = useAuth();
   const navigate = useNavigate();
@@ -13,14 +28,14 @@ export default function Dashboard() {
       value: profile?.articles_generated_this_month || 0,
       limit: profile?.plan_limits?.articles_per_month || 10,
       icon: FileText,
-      color: 'blue'
+      color: 'blue' as const
     },
     {
       label: 'Images Created',
       value: profile?.images_generated_this_month || 0,
       limit: profile?.plan_limits?.images_per_month || 20,
       icon: TrendingUp,
-      color: 'violet'
+      color: 'violet' as const
     }
   ];
 
@@ -37,14 +52,15 @@ export default function Dashboard() {
           {stats.map((stat) => {
             const Icon = stat.icon;
             const percentage = (stat.value / stat.limit) * 100;
+            const styles = colorStyles[stat.color];
             return (
               <div
                 key={stat.label}
-                className={`bg-slate-800 border border-slate-700 rounded-xl p-6 hover:border-${stat.color}-500/50 transition-colors`}
+                className={`bg-slate-800 border border-slate-700 rounded-xl p-6 transition-colors ${styles.border}`}
               >
                 <div className="flex items-center justify-between mb-4">
-                  <div className={`w-12 h-12 rounded-lg bg-${stat.color}-600/20 flex items-center justify-center`}>
-                    <Icon className={`w-6 h-6 text-${stat.color}-400`} />
+                  <div className={`w-12 h-12 rounded-lg ${styles.bg} flex items-center justify-center`}>
+                    <Icon className={`w-6 h-6 ${styles.text}`} />
                   </div>
                   <span className="text-slate-400 text-sm capitalize">{profile?.plan || 'free'} Plan</span>
                 </div>
@@ -54,7 +70,7 @@ export default function Dashboard() {
                 <p className="text-slate-400 text-sm mb-4">{stat.label}</p>
                 <div className="w-full bg-slate-700 rounded-full h-2 overflow-hidden">
                   <div
-                    className={`bg-${stat.color}-500 h-full transition-all`}
+                    className={`${styles.bar} h-full transition-all`}
                     style={{ width: `${Math.min(percentage, 100)}%` }}
                   />
                 </div>
@@ -69,7 +85,7 @@ export default function Dashboard() {
           <div className="grid md:grid-cols-2 gap-4">
             <button
               onClick={() => navigate('/generate')}
-              className="flex items-center justify-between p-6 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 rounded-lg transition-all group"
+              className="flex items-center justify-between p-6 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 rounded-lg transition-all group"
             >
               <div className="flex items-center space-x-4">
                 <div className="w-12 h-12 rounded-lg bg-white/20 flex items-center justify-center">
