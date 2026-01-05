@@ -1,15 +1,16 @@
-import { Sparkles, LayoutDashboard, FileText, Archive, Code, LogOut, User } from 'lucide-react';
+import { Sparkles, LayoutDashboard, FileText, Archive, Key, LogOut, User, Zap, Settings } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 interface SidebarProps {
-  activeView: string;
-  setActiveView: (view: string) => void;
+  activeView?: string;
+  setActiveView?: (view: string) => void;
 }
 
 export default function Sidebar({ activeView, setActiveView }: SidebarProps) {
   const { signOut, profile } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSignOut = async () => {
     await signOut();
@@ -17,22 +18,23 @@ export default function Sidebar({ activeView, setActiveView }: SidebarProps) {
   };
 
   const menuItems = [
-    { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { id: 'new-sequence', icon: FileText, label: 'New Sequence' },
-    { id: 'archives', icon: Archive, label: 'Archives' },
-    { id: 'api-config', icon: Code, label: 'API Config' },
+    { id: 'dashboard', path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { id: 'generate', path: '/generate', icon: Zap, label: 'Generate Article' },
+    { id: 'content', path: '/content', icon: FileText, label: 'My Content' },
+    { id: 'api-keys', path: '/api-keys', icon: Key, label: 'API Keys' },
+    { id: 'settings', path: '/settings', icon: Settings, label: 'Settings' },
   ];
 
   return (
     <aside className="w-64 bg-slate-950 border-r border-slate-800 flex flex-col">
       <div className="p-6 border-b border-slate-800">
         <div className="flex items-center space-x-3 mb-2">
-          <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+          <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-violet-600 rounded-lg flex items-center justify-center">
             <Sparkles className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-white font-bold text-lg">ContentForge AI</h1>
-            <p className="text-slate-400 text-xs">Blog Generator v2.0</p>
+            <h1 className="text-white font-bold text-lg">BlogForge AI</h1>
+            <p className="text-slate-400 text-xs">SEO Blog Platform</p>
           </div>
         </div>
       </div>
@@ -40,11 +42,14 @@ export default function Sidebar({ activeView, setActiveView }: SidebarProps) {
       <nav className="flex-1 p-4 space-y-1">
         {menuItems.map((item) => {
           const Icon = item.icon;
-          const isActive = activeView === item.id;
+          const isActive = location.pathname === item.path || activeView === item.id;
           return (
             <button
               key={item.id}
-              onClick={() => setActiveView(item.id)}
+              onClick={() => {
+                navigate(item.path);
+                setActiveView?.(item.id);
+              }}
               className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
                 isActive
                   ? 'bg-blue-600 text-white'

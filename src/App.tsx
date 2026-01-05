@@ -5,6 +5,8 @@ import Landing from './pages/Landing';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
 import Dashboard from './pages/Dashboard';
+import Generate from './pages/Generate';
+import APIKeys from './pages/APIKeys';
 
 function App() {
   return (
@@ -19,6 +21,22 @@ function App() {
             element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/generate"
+            element={
+              <ProtectedRoute>
+                <Generate />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/api-keys"
+            element={
+              <ProtectedRoute>
+                <APIKeys />
               </ProtectedRoute>
             }
           />
