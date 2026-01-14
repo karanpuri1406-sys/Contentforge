@@ -3,11 +3,11 @@ import { useEffect, useState } from 'react';
 import { initializeDatabase } from './lib/db';
 
 // Pages
-import Dashboard from './pages/Dashboard';
+import Dashboard from './pages/Dashboard_v2';
 import GenerateArticle from './pages/GenerateArticle';
 import ArticleLibrary from './pages/ArticleLibrary';
 import ArticleView from './pages/ArticleView';
-import Settings from './pages/Settings';
+import Settings from './pages/Settings_v2';
 import Diagnostics from './pages/Diagnostics';
 import Layout from './components/Layout';
 
