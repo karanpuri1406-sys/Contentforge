@@ -25,12 +25,36 @@ export interface CompetitorData {
  */
 export async function parseSitemap(sitemapUrl: string): Promise<SitemapEntry[]> {
   try {
-    const response = await axios.get(sitemapUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; SEOBlogBot/1.0)',
-      },
-      timeout: 10000,
-    });
+    // Use CORS proxy for client-side scraping
+    const corsProxies = [
+      'https://corsproxy.io/?',
+      'https://api.allorigins.win/raw?url=',
+      sitemapUrl // Try direct first
+    ];
+    
+    let response;
+    let lastError;
+    
+    // Try different methods to fetch the sitemap
+    for (const proxy of corsProxies) {
+      try {
+        const url = proxy === sitemapUrl ? sitemapUrl : proxy + encodeURIComponent(sitemapUrl);
+        response = await axios.get(url, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (compatible; SEOBlogBot/1.0)',
+          },
+          timeout: 15000,
+        });
+        break; // Success, exit loop
+      } catch (err) {
+        lastError = err;
+        continue; // Try next proxy
+      }
+    }
+    
+    if (!response) {
+      throw lastError || new Error('Failed to fetch sitemap');
+    }
 
     const $ = cheerio.load(response.data, { xmlMode: true });
     const entries: SitemapEntry[] = [];

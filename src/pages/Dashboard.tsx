@@ -25,6 +25,10 @@ export default function Dashboard() {
     }
 
     loadStats();
+    
+    // Poll for changes every 2 seconds to detect API key additions
+    const interval = setInterval(loadStats, 2000);
+    return () => clearInterval(interval);
   }, []);
 
   return (

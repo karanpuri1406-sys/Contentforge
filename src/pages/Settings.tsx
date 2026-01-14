@@ -13,6 +13,7 @@ import {
 import { db, ApiKey, WordPressSite, BrandVoice, InternalLink } from '../lib/db';
 import { testWordPressConnection } from '../services/wordpressService';
 import { importSitemap } from '../services/scrapingService';
+import ManualLinkEntry from '../components/ManualLinkEntry';
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState<'api-keys' | 'wordpress' | 'brand-voice' | 'internal-links'>('api-keys');
@@ -720,6 +721,23 @@ export default function Settings() {
                     <li>This improves your site's SEO through better internal linking structure</li>
                   </ul>
                 </div>
+
+                <div className="mt-6 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                  <h4 className="text-yellow-400 font-medium mb-2">⚠️ CORS Issues?</h4>
+                  <p className="text-sm text-gray-300 mb-2">
+                    If sitemap import fails due to browser security restrictions, you can add links manually below.
+                  </p>
+                </div>
+              </div>
+
+              {/* Manual Link Entry */}
+              <div>
+                <h3 className="text-lg font-semibold text-white mb-4">Add Links Manually</h3>
+                <ManualLinkEntry
+                  onLinkAdded={loadSettings}
+                  onSuccess={showSuccess}
+                  onError={showError}
+                />
               </div>
 
               {/* Internal Links List */}
