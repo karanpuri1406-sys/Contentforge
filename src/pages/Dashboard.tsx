@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FileText, TrendingUp, Sparkles, ArrowRight, Key } from 'lucide-react';
+import { FileText, TrendingUp, Sparkles, ArrowRight, Key, RefreshCw } from 'lucide-react';
 import { db } from '../lib/db';
 
 export default function Dashboard() {
@@ -10,11 +10,14 @@ export default function Dashboard() {
     publishedArticles: 0,
     hasApiKeys: false,
   });
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  useEffect(() => {
-    async function loadStats() {
+  const loadStats = async () => {
+    try {
       const articles = await db.articles.toArray();
       const apiKeys = await db.apiKeys.where({ isActive: true }).toArray();
+
+      console.log('Dashboard: Found API keys:', apiKeys); // Debug log
 
       setStats({
         totalArticles: articles.length,
@@ -22,8 +25,18 @@ export default function Dashboard() {
         publishedArticles: articles.filter(a => a.status === 'published').length,
         hasApiKeys: apiKeys.length > 0,
       });
+    } catch (error) {
+      console.error('Dashboard: Error loading stats:', error);
     }
+  };
 
+  const handleManualRefresh = async () => {
+    setIsRefreshing(true);
+    await loadStats();
+    setTimeout(() => setIsRefreshing(false), 500);
+  };
+
+  useEffect(() => {
     loadStats();
     
     // Poll for changes every 2 seconds to detect API key additions
@@ -54,13 +67,27 @@ export default function Dashboard() {
                 To start generating content, you need to add your Gemini (free) or OpenRouter API key.
                 Don't worry - we store them locally in your browser, and you only pay for what you use.
               </p>
-              <Link
-                to="/settings"
-                className="inline-flex items-center px-4 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 transition-colors font-medium"
-              >
-                Add API Keys
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
+              <div className="flex items-center space-x-3">
+                <Link
+                  to="/settings"
+                  className="inline-flex items-center px-4 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 transition-colors font-medium"
+                >
+                  Add API Keys
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+                <button
+                  onClick={handleManualRefresh}
+                  disabled={isRefreshing}
+                  className="inline-flex items-center px-4 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition-colors font-medium disabled:opacity-50"
+                  title="Refresh to check for API keys"
+                >
+                  <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  <span className="ml-2">Refresh</span>
+                </button>
+              </div>
+              <p className="text-xs text-gray-400 mt-3">
+                💡 Already added a key? Click refresh or wait a few seconds for auto-detection.
+              </p>
             </div>
           </div>
         </div>

@@ -84,16 +84,28 @@ export default function Settings() {
     }
 
     try {
-      await db.apiKeys.add({
+      const keyId = await db.apiKeys.add({
         ...newApiKey,
         isActive: true,
         createdAt: new Date(),
       });
+      console.log('Settings: API key added with ID:', keyId);
+      
+      // Verify it was saved
+      const savedKey = await db.apiKeys.get(keyId);
+      console.log('Settings: Saved API key:', savedKey);
+      
       setNewApiKey({ provider: 'gemini', keyValue: '', nickname: '' });
       loadSettings();
-      showSuccess('API key added successfully');
-    } catch (err) {
-      showError('Failed to add API key');
+      showSuccess('API key added successfully! Redirecting to dashboard...');
+      
+      // Redirect to dashboard after 1 second
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 1000);
+    } catch (err: any) {
+      console.error('Settings: Failed to add API key:', err);
+      showError(`Failed to add API key: ${err.message}`);
     }
   };
 
