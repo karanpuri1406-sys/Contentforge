@@ -1,132 +1,214 @@
-import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import DashboardLayout from '../components/DashboardLayout';
-import { Zap, FileText, TrendingUp, Clock } from 'lucide-react';
-
-const colorStyles = {
-  blue: {
-    border: 'hover:border-blue-500/50',
-    bg: 'bg-blue-600/20',
-    text: 'text-blue-400',
-    bar: 'bg-blue-500'
-  },
-  violet: {
-    border: 'hover:border-violet-500/50',
-    bg: 'bg-violet-600/20',
-    text: 'text-violet-400',
-    bar: 'bg-violet-500'
-  }
-};
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { FileText, TrendingUp, Sparkles, ArrowRight, Key } from 'lucide-react';
+import { db } from '../lib/db';
 
 export default function Dashboard() {
-  const { profile } = useAuth();
-  const navigate = useNavigate();
+  const [stats, setStats] = useState({
+    totalArticles: 0,
+    draftArticles: 0,
+    publishedArticles: 0,
+    hasApiKeys: false,
+  });
 
-  const stats = [
-    {
-      label: 'Articles Generated',
-      value: profile?.articles_generated_this_month || 0,
-      limit: profile?.plan_limits?.articles_per_month || 10,
-      icon: FileText,
-      color: 'blue' as const
-    },
-    {
-      label: 'Images Created',
-      value: profile?.images_generated_this_month || 0,
-      limit: profile?.plan_limits?.images_per_month || 20,
-      icon: TrendingUp,
-      color: 'violet' as const
+  useEffect(() => {
+    async function loadStats() {
+      const articles = await db.articles.toArray();
+      const apiKeys = await db.apiKeys.where({ isActive: true }).toArray();
+
+      setStats({
+        totalArticles: articles.length,
+        draftArticles: articles.filter(a => a.status === 'draft').length,
+        publishedArticles: articles.filter(a => a.status === 'published').length,
+        hasApiKeys: apiKeys.length > 0,
+      });
     }
-  ];
+
+    loadStats();
+  }, []);
 
   return (
-    <DashboardLayout>
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Welcome Back!</h1>
-          <p className="text-slate-400">Let's create some amazing SEO-optimized content</p>
-        </div>
+    <div className="space-y-8">
+      {/* Header */}
+      <div>
+        <h1 className="text-4xl font-bold text-white mb-2">Welcome to BlogForge AI</h1>
+        <p className="text-gray-300 text-lg">
+          Create SEO-optimized blog content that ranks. Powered by your own AI.
+        </p>
+      </div>
 
-        {/* Quick Stats */}
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
-          {stats.map((stat) => {
-            const Icon = stat.icon;
-            const percentage = (stat.value / stat.limit) * 100;
-            const styles = colorStyles[stat.color];
-            return (
-              <div
-                key={stat.label}
-                className={`bg-slate-800 border border-slate-700 rounded-xl p-6 transition-colors ${styles.border}`}
+      {/* API Key Warning */}
+      {!stats.hasApiKeys && (
+        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-6">
+          <div className="flex items-start space-x-4">
+            <Key className="h-6 w-6 text-yellow-400 flex-shrink-0 mt-1" />
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-yellow-400 mb-2">
+                API Keys Required
+              </h3>
+              <p className="text-gray-300 mb-4">
+                To start generating content, you need to add your Gemini (free) or OpenRouter API key.
+                Don't worry - we store them locally in your browser, and you only pay for what you use.
+              </p>
+              <Link
+                to="/settings"
+                className="inline-flex items-center px-4 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 transition-colors font-medium"
               >
-                <div className="flex items-center justify-between mb-4">
-                  <div className={`w-12 h-12 rounded-lg ${styles.bg} flex items-center justify-center`}>
-                    <Icon className={`w-6 h-6 ${styles.text}`} />
-                  </div>
-                  <span className="text-slate-400 text-sm capitalize">{profile?.plan || 'free'} Plan</span>
-                </div>
-                <h3 className="text-2xl font-bold text-white mb-1">
-                  {stat.value} / {stat.limit}
-                </h3>
-                <p className="text-slate-400 text-sm mb-4">{stat.label}</p>
-                <div className="w-full bg-slate-700 rounded-full h-2 overflow-hidden">
-                  <div
-                    className={`${styles.bar} h-full transition-all`}
-                    style={{ width: `${Math.min(percentage, 100)}%` }}
-                  />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Quick Actions */}
-        <div className="bg-slate-800 border border-slate-700 rounded-xl p-8">
-          <h2 className="text-2xl font-bold text-white mb-6">Quick Actions</h2>
-          <div className="grid md:grid-cols-2 gap-4">
-            <button
-              onClick={() => navigate('/generate')}
-              className="flex items-center justify-between p-6 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 rounded-lg transition-all group"
-            >
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 rounded-lg bg-white/20 flex items-center justify-center">
-                  <Zap className="w-6 h-6 text-white" />
-                </div>
-                <div className="text-left">
-                  <h3 className="text-white font-semibold text-lg">Generate Article</h3>
-                  <p className="text-blue-100 text-sm">Create SEO-optimized content</p>
-                </div>
-              </div>
-              <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity">→</span>
-            </button>
-
-            <button
-              onClick={() => navigate('/api-keys')}
-              className="flex items-center justify-between p-6 bg-slate-700 hover:bg-slate-600 rounded-lg transition-all group"
-            >
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 rounded-lg bg-slate-600 flex items-center justify-center">
-                  <FileText className="w-6 h-6 text-slate-300" />
-                </div>
-                <div className="text-left">
-                  <h3 className="text-white font-semibold text-lg">My Content</h3>
-                  <p className="text-slate-400 text-sm">View generated articles</p>
-                </div>
-              </div>
-              <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity">→</span>
-            </button>
+                Add API Keys
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </div>
           </div>
         </div>
+      )}
 
-        {/* Recent Activity */}
-        <div className="mt-8 bg-slate-800 border border-slate-700 rounded-xl p-8">
-          <h2 className="text-2xl font-bold text-white mb-6">Recent Activity</h2>
-          <div className="text-center py-12">
-            <Clock className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-            <p className="text-slate-400">No recent activity yet</p>
-            <p className="text-slate-500 text-sm">Generate your first article to get started!</p>
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-gradient-to-br from-purple-600/20 to-pink-600/20 backdrop-blur-sm border border-purple-500/30 rounded-xl p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="h-12 w-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
+              <FileText className="h-6 w-6 text-purple-400" />
+            </div>
+            <span className="text-3xl font-bold text-white">{stats.totalArticles}</span>
+          </div>
+          <h3 className="text-gray-300 font-medium">Total Articles</h3>
+          <p className="text-sm text-gray-400 mt-1">All time generated</p>
+        </div>
+
+        <div className="bg-gradient-to-br from-blue-600/20 to-cyan-600/20 backdrop-blur-sm border border-blue-500/30 rounded-xl p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="h-12 w-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
+              <TrendingUp className="h-6 w-6 text-blue-400" />
+            </div>
+            <span className="text-3xl font-bold text-white">{stats.publishedArticles}</span>
+          </div>
+          <h3 className="text-gray-300 font-medium">Published</h3>
+          <p className="text-sm text-gray-400 mt-1">Live articles</p>
+        </div>
+
+        <div className="bg-gradient-to-br from-orange-600/20 to-red-600/20 backdrop-blur-sm border border-orange-500/30 rounded-xl p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="h-12 w-12 bg-orange-500/20 rounded-lg flex items-center justify-center">
+              <Sparkles className="h-6 w-6 text-orange-400" />
+            </div>
+            <span className="text-3xl font-bold text-white">{stats.draftArticles}</span>
+          </div>
+          <h3 className="text-gray-300 font-medium">Drafts</h3>
+          <p className="text-sm text-gray-400 mt-1">Work in progress</p>
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="bg-slate-800/50 backdrop-blur-sm border border-purple-500/20 rounded-xl p-8">
+        <h2 className="text-2xl font-bold text-white mb-6">Quick Actions</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Link
+            to="/generate"
+            className="group flex items-center justify-between p-6 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg hover:from-purple-500 hover:to-pink-500 transition-all"
+          >
+            <div>
+              <h3 className="text-lg font-semibold text-white mb-1">Generate New Article</h3>
+              <p className="text-purple-100 text-sm">Create SEO-optimized content</p>
+            </div>
+            <ArrowRight className="h-6 w-6 text-white group-hover:translate-x-1 transition-transform" />
+          </Link>
+
+          <Link
+            to="/articles"
+            className="group flex items-center justify-between p-6 bg-slate-700/50 rounded-lg hover:bg-slate-700 transition-all border border-slate-600"
+          >
+            <div>
+              <h3 className="text-lg font-semibold text-white mb-1">View Articles</h3>
+              <p className="text-gray-400 text-sm">Manage your content library</p>
+            </div>
+            <ArrowRight className="h-6 w-6 text-gray-400 group-hover:translate-x-1 transition-transform" />
+          </Link>
+
+          <Link
+            to="/settings"
+            className="group flex items-center justify-between p-6 bg-slate-700/50 rounded-lg hover:bg-slate-700 transition-all border border-slate-600"
+          >
+            <div>
+              <h3 className="text-lg font-semibold text-white mb-1">Configure Settings</h3>
+              <p className="text-gray-400 text-sm">API keys, WordPress, brand voice</p>
+            </div>
+            <ArrowRight className="h-6 w-6 text-gray-400 group-hover:translate-x-1 transition-transform" />
+          </Link>
+
+          <div className="group flex items-center justify-between p-6 bg-gradient-to-r from-slate-700/50 to-slate-800/50 rounded-lg border border-purple-500/30">
+            <div>
+              <h3 className="text-lg font-semibold text-white mb-1">📊 Coming Soon</h3>
+              <p className="text-gray-400 text-sm">Analytics & performance tracking</p>
+            </div>
           </div>
         </div>
       </div>
-    </DashboardLayout>
+
+      {/* Features Overview */}
+      <div className="bg-slate-800/50 backdrop-blur-sm border border-purple-500/20 rounded-xl p-8">
+        <h2 className="text-2xl font-bold text-white mb-6">What Makes BlogForge AI Special?</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div>
+            <div className="h-10 w-10 bg-purple-500/20 rounded-lg flex items-center justify-center mb-4">
+              <span className="text-2xl">🔑</span>
+            </div>
+            <h3 className="text-lg font-semibold text-white mb-2">Bring Your Own Key</h3>
+            <p className="text-gray-400 text-sm">
+              Use your own Gemini (free) or OpenRouter API keys. Pay only for AI usage, not platform markup.
+            </p>
+          </div>
+
+          <div>
+            <div className="h-10 w-10 bg-purple-500/20 rounded-lg flex items-center justify-center mb-4">
+              <span className="text-2xl">🎯</span>
+            </div>
+            <h3 className="text-lg font-semibold text-white mb-2">SEO Optimized</h3>
+            <p className="text-gray-400 text-sm">
+              Advanced keyword optimization, meta tags, schema markup, and internal linking.
+            </p>
+          </div>
+
+          <div>
+            <div className="h-10 w-10 bg-purple-500/20 rounded-lg flex items-center justify-center mb-4">
+              <span className="text-2xl">🔍</span>
+            </div>
+            <h3 className="text-lg font-semibold text-white mb-2">Competitor Analysis</h3>
+            <p className="text-gray-400 text-sm">
+              Analyze top-ranking articles and create better content that outranks them.
+            </p>
+          </div>
+
+          <div>
+            <div className="h-10 w-10 bg-purple-500/20 rounded-lg flex items-center justify-center mb-4">
+              <span className="text-2xl">🎨</span>
+            </div>
+            <h3 className="text-lg font-semibold text-white mb-2">Beautiful HTML</h3>
+            <p className="text-gray-400 text-sm">
+              Rich formatting with tables, callouts, accordions, and interactive elements.
+            </p>
+          </div>
+
+          <div>
+            <div className="h-10 w-10 bg-purple-500/20 rounded-lg flex items-center justify-center mb-4">
+              <span className="text-2xl">📝</span>
+            </div>
+            <h3 className="text-lg font-semibold text-white mb-2">WordPress Publishing</h3>
+            <p className="text-gray-400 text-sm">
+              Publish directly to your WordPress site with one click. Supports categories and tags.
+            </p>
+          </div>
+
+          <div>
+            <div className="h-10 w-10 bg-purple-500/20 rounded-lg flex items-center justify-center mb-4">
+              <span className="text-2xl">🔗</span>
+            </div>
+            <h3 className="text-lg font-semibold text-white mb-2">Internal Linking</h3>
+            <p className="text-gray-400 text-sm">
+              Import your sitemap and automatically add relevant internal links to boost SEO.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
