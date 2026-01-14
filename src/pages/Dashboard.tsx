@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FileText, TrendingUp, Sparkles, ArrowRight, Key, RefreshCw } from 'lucide-react';
+import { FileText, TrendingUp, Sparkles, ArrowRight, Key, RefreshCw, AlertTriangle } from 'lucide-react';
 import { db } from '../lib/db';
+import { getActiveApiKeys } from '../lib/dbHelpers';
 
 export default function Dashboard() {
   const [stats, setStats] = useState({
@@ -11,22 +12,45 @@ export default function Dashboard() {
     hasApiKeys: false,
   });
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<string[]>([]);
 
   const loadStats = async () => {
+    const logs: string[] = [];
     try {
+      logs.push(`[${new Date().toISOString()}] Loading dashboard stats...`);
+      
       const articles = await db.articles.toArray();
-      const apiKeys = await db.apiKeys.where({ isActive: true }).toArray();
+      logs.push(`Found ${articles.length} articles`);
+      
+      // Try multiple methods to get API keys
+      const activeKeys = await getActiveApiKeys();
+      logs.push(`getActiveApiKeys() returned ${activeKeys.length} keys`);
+      
+      const allKeys = await db.apiKeys.toArray();
+      logs.push(`Total keys in DB: ${allKeys.length}`);
+      
+      const activeKeysQuery = await db.apiKeys.where({ isActive: true }).toArray();
+      logs.push(`Query for active keys returned: ${activeKeysQuery.length}`);
 
-      console.log('Dashboard: Found API keys:', apiKeys); // Debug log
+      console.log('[Dashboard] Stats loaded:', { 
+        articles: articles.length, 
+        activeKeys: activeKeys.length,
+        allKeys: allKeys.length,
+        keys: allKeys
+      });
 
       setStats({
         totalArticles: articles.length,
         draftArticles: articles.filter(a => a.status === 'draft').length,
         publishedArticles: articles.filter(a => a.status === 'published').length,
-        hasApiKeys: apiKeys.length > 0,
+        hasApiKeys: activeKeys.length > 0,
       });
+      
+      setDebugInfo(logs);
     } catch (error) {
-      console.error('Dashboard: Error loading stats:', error);
+      logs.push(`Error: ${(error as Error).message}`);
+      console.error('[Dashboard] Error loading stats:', error);
+      setDebugInfo(logs);
     }
   };
 
@@ -37,11 +61,19 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
+    console.log('[Dashboard] Component mounted, loading stats...');
     loadStats();
     
-    // Poll for changes every 2 seconds to detect API key additions
-    const interval = setInterval(loadStats, 2000);
-    return () => clearInterval(interval);
+    // Poll for changes every 3 seconds to detect API key additions
+    const interval = setInterval(() => {
+      console.log('[Dashboard] Polling for updates...');
+      loadStats();
+    }, 3000);
+    
+    return () => {
+      console.log('[Dashboard] Component unmounting, clearing interval');
+      clearInterval(interval);
+    };
   }, []);
 
   return (
@@ -240,6 +272,28 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Debug Info - Collapsible */}
+      {debugInfo.length > 0 && (
+        <details className="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
+          <summary className="cursor-pointer text-sm font-medium text-gray-400 hover:text-gray-300">
+            🔧 Debug Info (Click to expand)
+          </summary>
+          <div className="mt-3 space-y-1 text-xs font-mono text-gray-400">
+            {debugInfo.map((log, i) => (
+              <div key={i}>{log}</div>
+            ))}
+          </div>
+          <div className="mt-4 pt-3 border-t border-slate-700">
+            <Link 
+              to="/diagnostics"
+              className="text-xs text-purple-400 hover:text-purple-300"
+            >
+              → View Full Diagnostics Page
+            </Link>
+          </div>
+        </details>
+      )}
     </div>
   );
 }

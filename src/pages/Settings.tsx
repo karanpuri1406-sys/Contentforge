@@ -84,27 +84,46 @@ export default function Settings() {
     }
 
     try {
+      console.log('[Settings] Adding API key...', { 
+        provider: newApiKey.provider, 
+        hasNickname: !!newApiKey.nickname,
+        timestamp: new Date().toISOString()
+      });
+      
       const keyId = await db.apiKeys.add({
-        ...newApiKey,
+        provider: newApiKey.provider,
+        keyValue: newApiKey.keyValue.trim(),
+        nickname: newApiKey.nickname.trim() || undefined,
         isActive: true,
         createdAt: new Date(),
       });
-      console.log('Settings: API key added with ID:', keyId);
       
-      // Verify it was saved
+      console.log('[Settings] API key added with ID:', keyId);
+      
+      // Wait a bit to ensure IndexedDB write completes
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      // Verify it was saved with multiple checks
       const savedKey = await db.apiKeys.get(keyId);
-      console.log('Settings: Saved API key:', savedKey);
+      console.log('[Settings] Verified saved key:', savedKey);
+      
+      const allKeys = await db.apiKeys.toArray();
+      console.log('[Settings] All keys in DB now:', allKeys.length, allKeys);
+      
+      const activeKeys = await db.apiKeys.where({ isActive: true }).toArray();
+      console.log('[Settings] Active keys:', activeKeys.length);
       
       setNewApiKey({ provider: 'gemini', keyValue: '', nickname: '' });
-      loadSettings();
+      await loadSettings();
       showSuccess('API key added successfully! Redirecting to dashboard...');
       
-      // Redirect to dashboard after 1 second
+      // Use navigate instead of window.location to avoid full page reload
       setTimeout(() => {
-        window.location.href = '/dashboard';
-      }, 1000);
+        console.log('[Settings] Navigating to dashboard...');
+        navigate('/dashboard');
+      }, 1500);
     } catch (err: any) {
-      console.error('Settings: Failed to add API key:', err);
+      console.error('[Settings] Failed to add API key:', err);
       showError(`Failed to add API key: ${err.message}`);
     }
   };

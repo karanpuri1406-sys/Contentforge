@@ -5,6 +5,7 @@ import {
   Library, 
   Settings as SettingsIcon,
   Sparkles,
+  Activity,
 } from 'lucide-react';
 
 export default function Layout() {

@@ -8,6 +8,7 @@ import GenerateArticle from './pages/GenerateArticle';
 import ArticleLibrary from './pages/ArticleLibrary';
 import ArticleView from './pages/ArticleView';
 import Settings from './pages/Settings';
+import Diagnostics from './pages/Diagnostics';
 import Layout from './components/Layout';
 
 function App() {
@@ -40,6 +41,7 @@ function App() {
           <Route path="articles" element={<ArticleLibrary />} />
           <Route path="articles/:id" element={<ArticleView />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="diagnostics" element={<Diagnostics />} />
         </Route>
       </Routes>
     </Router>
